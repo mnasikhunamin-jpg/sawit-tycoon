@@ -1,33 +1,26 @@
 import streamlit as st
-from streamlit_oauth import OAuth2Component
 import random
 
-# --- GOOGLE OAUTH CONFIGURATION ---
-CLIENT_ID = "MASUKKAN_CLIENT_ID_ANDA_://googleusercontent.com"
-CLIENT_SECRET = "GOCSPX-abcdefg123456"
-AUTHORIZE_URL = "https://google.com"
-TOKEN_URL = "https://googleapis.com"
-REVOKE_URL = "https://googleapis.com"
+st.set_page_config(page_title="Sawit Tycoon Pro Edisi Instan", page_icon="🌴", layout="centered")
 
-st.set_page_config(page_title="Sawit Tycoon Pro Monetized", page_icon="🌴", layout="centered")
-
-# Inisialisasi OAuth
-oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL, TOKEN_URL, REVOKE_URL)
-
-# --- ALUR LOGIN ---
-if "auth" not in st.session_state:
-    st.title("🌴 Sawit Tycoon Pro - Edisi Komersial")
-    st.write("Silakan login dengan Google untuk mulai bermain dan mengelola perkebunan sawit.")
-    result = oauth2.authorize_button(
-        name="Masuk dengan Google",
-        redirect_uri="http://localhost:8501/", 
-        scope="openid email profile",
-        key="google_auth"
-    )
-    if result:
-        st.session_state["auth"] = result
-        st.rerun()
+# --- SISTEM LOGIN SIMULASI (BYPASS GOOGLE CLOUD) ---
+if "user_logged_in" not in st.session_state:
+    st.title("🌴 Sawit Tycoon Pro - Edisi Pengusaha")
+    st.write("Masukan Nama Anda untuk Memulai Petualangan Agribisnis Kelapa Sawit.")
+    
+    # Input nama pemain sebagai pengganti login Google
+    nama_pemain = st.text_input("Nama Pemain / Nama Perusahaan:", placeholder="Contoh: Sawit Makmur Jaya")
+    
+    if st.button("Masuk & Mulai Berbisnis 🚀", type="primary"):
+        if nama_pemain.strip() != "":
+            st.session_state["user_logged_in"] = nama_pemain
+            st.rerun()
+        else:
+            st.error("Silakan isi nama Anda terlebih dahulu!")
     st.stop()
+
+# --- AMBIL NAMA PEMAIN YANG AKTIF ---
+nama_user = st.session_state["user_logged_in"]
 
 # --- DATABASE / STATE GAME ---
 if "db" not in st.session_state:
@@ -41,9 +34,9 @@ if "db" not in st.session_state:
         "kesehatan_tanaman": 100,
         "kebersihan_gulma": 100,
         "harga_tbs_hari_ini": 2500,
-        "hama_aktif": False,  # Indikator jika sedang terserang hama
-        "id_pemain": random.randint(1000, 9999), # ID unik untuk verifikasi bayar
-        "logs": ["Akun terverifikasi. Kelola risiko dengan bijak untuk keuntungan maksimal."]
+        "hama_aktif": False,
+        "id_pemain": random.randint(1000, 9999),
+        "logs": [f"Selamat Datang {nama_user}! Perkebunan Anda resmi dibuka hari ini."]
     }
 
 db = st.session_state.db
@@ -53,7 +46,6 @@ def update_kondisi_pasar():
     perubahan_harga = random.randint(-300, 300)
     db["harga_tbs_hari_ini"] = max(1800, min(3500, db["harga_tbs_hari_ini"] + perubahan_harga))
     
-    # Peluang serangan hama ulat api (15%) jika pohon sudah di lapangan dan belum diserang
     if db["populasi_pohon"] > 0 and not db["hama_aktif"] and random.random() < 0.15:
         db["kesehatan_tanaman"] = max(20, db["kesehatan_tanaman"] - 40)
         db["hama_aktif"] = True
@@ -63,6 +55,7 @@ update_kondisi_pasar()
 
 # --- TAMPILAN UTAMA WEB ---
 st.title("🌴 SAWIT TYCOON PRO: SIMULATOR PASAR")
+st.caption(f"Direktur Utama: **{nama_user}** | ID Pemain: SAWIT-{db['id_pemain']}")
 
 # --- BANNER SPONSOR DI SIDEBAR (PENGHASILAN 1) ---
 st.sidebar.markdown("### 📢 SPONSOR PERKEBUNAN")
@@ -85,6 +78,13 @@ col4, col5 = st.columns(2)
 col4.metric("Kesehatan Tanaman", f"{db['kesehatan_tanaman']}%")
 col5.metric("Kebersihan Lahan (Gulma)", f"{db['kebersihan_gulma']}%")
 
+# Tombol Keluar Akun
+if st.sidebar.button("Keluar Game 🚪"):
+    del st.session_state["user_logged_in"]
+    if "db" in st.session_state:
+        del st.session_state["db"]
+    st.rerun()
+
 # Proteksi Kebangkrutan
 if db["dana"] < 0:
     st.error("🚨 GAME OVER: Anda Bangkrut! Silakan coba lagi.")
@@ -93,38 +93,27 @@ if db["dana"] < 0:
         st.rerun()
     st.stop()
 
-# ==============================================================================
-# 🔥 FITUR PENGHASIL CUAL 2: MIKROTRANSAKSI INSTANT RECOVERY VIA QRIS
-# ==============================================================================
+# QRIS MIKROTRANSAKSI
 if db["hama_aktif"]:
     st.error("🐛 Kebun Anda sedang mengalami wabah Hama Ulat Api! Pertumbuhan terhambat.")
-    
-    # Tombol pemicu pembayaran muncul
     if st.button("🛡️ Pulihkan Kesehatan Tanaman Instan (Rp 2.000 via QRIS)", type="primary"):
         st.session_state["tampilkan_qris"] = True
 
-    # Jika tombol ditekan, tampilkan QRIS dan kode unik pembayarannya
     if st.session_state.get("tampilkan_qris", False):
         st.markdown("### 💳 Pembayaran Pemulihan Instan")
         st.write(f"Silakan pindai QRIS di bawah ini sebesar **Rp 2.000**.")
-        st.info(f"📌 **PENTING:** Masukkan Kode Unik atau Pesan **'SAWIT-{db['id_pemain']}'** pada aplikasi e-wallet (DANA/OVO) Anda saat membayar agar admin bisa memverifikasi.")
-        
-        # GANTI LINK DI BAWAH INI DENGAN URL GAMBAR QRIS DANA/OVO/LINKAJA ASLI ANDA
+        st.info(f"📌 **PENTING:** Masukkan Kode Unik atau Pesan **'SAWIT-{db['id_pemain']}'** pada e-wallet saat membayar.")
         st.image("https://wikimedia.org", width=250, caption="Scan QRIS Anda Disini")
         
-        st.warning("Konfirmasi Pembayaran: Setelah Anda mentransfer, hubungi Admin melalui WhatsApp atau tekan tombol klaim di bawah setelah transfer selesai.")
-        
         if st.button("Klaim Pulih (Setelah Transfer) ✅"):
-            # Simulasi persetujuan (Pada sistem nyata, Anda mengecek mutasi masuk e-wallet sesuai kode unik pemain)
             db["kesehatan_tanaman"] = 100
             db["hama_aktif"] = False
             st.session_state["tampilkan_qris"] = False
-            db["logs"].append(f"💸 PREMIUM: Pemain dengan ID SAWIT-{db['id_pemain']} berhasil memulihkan tanaman via QRIS!")
+            db["logs"].append(f"💸 PREMIUM: Pemain SAWIT-{db['id_pemain']} berhasil memulihkan tanaman via QRIS!")
             st.success("Sukses! Tanaman Anda telah pulih 100% menjadi prima.")
             st.rerun()
-# ==============================================================================
 
-# --- MENU OPERASIONAL GAME STANDARD ---
+# --- MENU OPERASIONAL GAME ---
 st.header("🕹️ Menu Eksekusi Agribisnis")
 
 pembelian_aktif = db["kecambah_ppks"] == 0 and db["polibag_isi"] == 0 and db["populasi_pohon"] == 0
