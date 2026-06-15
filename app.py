@@ -1,17 +1,32 @@
 import streamlit as st
 import random
 
-st.set_page_config(page_title="Sawit Tycoon Pro Edisi Instan", page_icon="🌴", layout="centered")
+st.set_page_config(page_title="Sawit Tycoon Pro Premium", page_icon="🌴", layout="centered")
 
-# --- SISTEM LOGIN SIMULASI (BYPASS GOOGLE CLOUD) ---
+# CSS Kustom untuk mempercantik tampilan dan mencegah teks terpotong
+st.markdown("""
+<style>
+    .metric-box {
+        background-color: #1e293b;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #334155;
+        text-align: center;
+    }
+    h1, h2, h3 {
+        color: #22c55e !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# --- SISTEM LOGIN SIMULASI ---
 if "user_logged_in" not in st.session_state:
-    st.title("🌴 Sawit Tycoon Pro - Edisi Pengusaha")
-    st.write("Masukan Nama Anda untuk Memulai Petualangan Agribisnis Kelapa Sawit.")
+    st.title("🌴 Sawit Tycoon Pro - Edisi Komersial")
+    st.write("Kelola perkebunan sawit, hadapi dinamika pasar, dan hasilkan profit nyata!")
     
-    # Input nama pemain sebagai pengganti login Google
-    nama_pemain = st.text_input("Nama Pemain / Nama Perusahaan:", placeholder="Contoh: Sawit Makmur Jaya")
+    nama_pemain = st.text_input("Nama Direktur Utama:", placeholder="Contoh: Nasikhun")
     
-    if st.button("Masuk & Mulai Berbisnis 🚀", type="primary"):
+    if st.button("Mulai Bangun Kerajaan Sawit 🚀", type="primary"):
         if nama_pemain.strip() != "":
             st.session_state["user_logged_in"] = nama_pemain
             st.rerun()
@@ -19,7 +34,6 @@ if "user_logged_in" not in st.session_state:
             st.error("Silakan isi nama Anda terlebih dahulu!")
     st.stop()
 
-# --- AMBIL NAMA PEMAIN YANG AKTIF ---
 nama_user = st.session_state["user_logged_in"]
 
 # --- DATABASE / STATE GAME ---
@@ -54,29 +68,65 @@ def update_kondisi_pasar():
 update_kondisi_pasar()
 
 # --- TAMPILAN UTAMA WEB ---
-st.title("🌴 SAWIT TYCOON PRO: SIMULATOR PASAR")
+st.title("🌴 SAWIT TYCOON PRO")
 st.caption(f"Direktur Utama: **{nama_user}** | ID Pemain: SAWIT-{db['id_pemain']}")
+
+# ==============================================================================
+# 🖼️ SISTEM RENDER GAMBAR SIMULASI DINAMIS (AI GEN STYLE)
+# ==============================================================================
+st.markdown("### 🗺️ Visualisasi Real-Time Lahan Anda")
+
+# Logika pemilihan gambar berdasarkan umur tanaman sawit
+if db["umur_bulan"] == 0:
+    # Fase persiapan / Gudang
+    img_url = "https://unsplash.com"
+    caption_img = "Fase 1: Persiapan Kecambah PPKS & Media Tanam Polibag"
+elif db["umur_bulan"] < 12:
+    # Fase Pre-Nursery
+    img_url = "https://unsplash.com"
+    caption_img = "Fase 2: Pembibitan Awal Sawit di Pre-Nursery"
+elif db["umur_bulan"] < 48:
+    # Fase Lahan Belum Menghasilkan (TBM)
+    img_url = "https://unsplash.com"
+    caption_img = "Fase 3: Tanaman Belum Menghasilkan (Usia Muda di Lapangan)"
+else:
+    # Fase Menghasilkan (TM) - Siap Panen
+    img_url = "https://unsplash.com"
+    caption_img = "Fase 4: Perkebunan Sawit Produktif 4 Tahun, Siap Panen TBS!"
+
+st.image(img_url, caption=caption_img, use_container_width=True)
+# ==============================================================================
 
 # --- BANNER SPONSOR DI SIDEBAR (PENGHASILAN 1) ---
 st.sidebar.markdown("### 📢 SPONSOR PERKEBUNAN")
 st.sidebar.info("""
 **🌱 TOKO TANI MAJU UTAMA**
 Menyediakan herbisida dan pupuk sawit original.
-*Hubungi email pemilik game untuk pasang iklan di sini!*
+*Hubungi kami untuk pasang produk Anda di sini!*
 """)
 
 # --- DASHBOARD ASET & KONDISI PASAR ---
-st.header("📈 Dashboard Pasar & Kondisi Perkebunan")
+st.header("📈 Dashboard Perkebunan")
+
+# Widget Harga yang eye-catching
 st.metric(label="💰 Harga TBS Pabrik Hari Ini", value=f"Rp {db['harga_tbs_hari_ini']}/Kg")
 
-col1, col2, col3 = st.columns(3)
-col1.metric("Dana Tunai", f"Rp {db['dana']:,}")
-col2.metric("Aset Lahan", f"{db['lahan_hektar']} Hektar")
-col3.metric("Umur Tanaman", f"{db['umur_bulan']} Bulan")
+# Menggunakan format kolom yang rapi agar data angka tidak terpotong (...)
+c1, c2, c3 = st.columns(3)
+with c1:
+    st.markdown(f"<div class='metric-box'>💵 <b>Dana Tunai</b><br><span style='font-size:16px;color:#ef4444;'>Rp {db['dana']:,}</span></div>", unsafe_allow_html=True)
+with c2:
+    st.markdown(f"<div class='metric-box'>🗺️ <b>Aset Lahan</b><br><span style='font-size:18px;'>{db['lahan_hektar']} Hektar</span></div>", unsafe_allow_html=True)
+with c3:
+    st.markdown(f"<div class='metric-box'>⏳ <b>Umur Tren</b><br><span style='font-size:18px;'>{db['umur_bulan']} Bulan</span></div>", unsafe_allow_html=True)
 
-col4, col5 = st.columns(2)
-col4.metric("Kesehatan Tanaman", f"{db['kesehatan_tanaman']}%")
-col5.metric("Kebersihan Lahan (Gulma)", f"{db['kebersihan_gulma']}%")
+st.markdown("<br>", unsafe_allow_html=True)
+
+c4, c5 = st.columns(2)
+with c4:
+    st.markdown(f"<div class='metric-box'>❤️ <b>Kesehatan Tanaman</b><br><span style='font-size:20px;color:#22c55e;'>{db['kesehatan_tanaman']}%</span></div>", unsafe_allow_html=True)
+with c5:
+    st.markdown(f"<div class='metric-box'>🌿 <b>Kebersihan Lahan</b><br><span style='font-size:20px;color:#3b82f6;'>{db['kebersihan_gulma']}%</span></div>", unsafe_allow_html=True)
 
 # Tombol Keluar Akun
 if st.sidebar.button("Keluar Game 🚪"):
@@ -93,7 +143,7 @@ if db["dana"] < 0:
         st.rerun()
     st.stop()
 
-# QRIS MIKROTRANSAKSI
+# QRIS MIKROTRANSAKSI (PENGHASILAN 2)
 if db["hama_aktif"]:
     st.error("🐛 Kebun Anda sedang mengalami wabah Hama Ulat Api! Pertumbuhan terhambat.")
     if st.button("🛡️ Pulihkan Kesehatan Tanaman Instan (Rp 2.000 via QRIS)", type="primary"):
