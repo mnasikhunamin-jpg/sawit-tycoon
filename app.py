@@ -4,7 +4,7 @@ import random
 
 # --- GOOGLE OAUTH CONFIGURATION ---
 CLIENT_ID = "MASUKKAN_CLIENT_ID_ANDA_://googleusercontent.com"
-CLIENT_SECRET = "MASUKKAN_CLIENT_SECRET_ANDA_DISINI"
+CLIENT_SECRET = "GOCSPX-abcdefg123456"
 AUTHORIZE_URL = "https://google.com"
 TOKEN_URL = "https://googleapis.com"
 REVOKE_URL = "https://googleapis.com"
